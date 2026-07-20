@@ -10,6 +10,11 @@ const pino = require('pino');
 const fs = require('fs');
 const path = require('path');
 
+// 👇 Ye 2 lines yahan add karni hain
+const yts = require('yt-search');
+const ytdl = require('@distube/ytdl-core');
+
+
 // ============================================
 // CONFIG — ab yeh config.json se load hota hai
 // Panel ke through form se update hota hai, script edit
@@ -218,10 +223,6 @@ async function getGeminiImageReply(userId, imageBase64, caption, mimeType) {
 // YOUTUBE SONG DOWNLOAD
 // ============================================
 async function sendYoutubeSong(sock, msg, query) {
-const yts = require('yt-search');
-const ytdl = require('@distube/ytdl-core');
-
-async function sendYoutubeSong(sock, msg, query) {
     const jid = msg.key.remoteJid;
 
     try {
@@ -273,6 +274,7 @@ async function sendYoutubeSong(sock, msg, query) {
         }, { quoted: msg });
     }
 }
+
 
 // ============================================
 // HELPER
