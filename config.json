@@ -5,5 +5,5 @@
   "sessionDir": "./auth_info_baileys",
   "prefix": "!",
   "geminiApiKey": "YOUR_GEMINI_API_KEY",
-  "geminiModel": "gemini-2.5-flash"
+  "geminiModel": "gemini-flash-latest"
 }
