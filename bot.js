@@ -582,7 +582,7 @@ async function startBot() {
     const { state, saveCreds } = await useMultiFileAuthState(CONFIG.sessionDir);
 
     const sock = makeWASocket({
-     q   version,
+        version,
         auth: state,
         logger: pino({ level: 'silent' }),
         printQRInTerminal: false,
