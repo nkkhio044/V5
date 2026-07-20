@@ -6,5 +6,5 @@
   "prefix": "!",
 
   "openRouterApiKey": "",
-  "openRouterModel": "qwen/qwen3-30b-a3b:free"
+  "openRouterModel": "openrouter/free"
 }
