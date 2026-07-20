@@ -4,6 +4,7 @@
   "ownerName": "Uday",
   "sessionDir": "./auth_info_baileys",
   "prefix": "!",
-  "geminiApiKey": "YOUR_GEMINI_API_KEY",
-  "geminiModel": "gemini-flash-latest"
+
+  "openRouterApiKey": "",
+  "openRouterModel": "qwen/qwen3-30b-a3b:free"
 }
