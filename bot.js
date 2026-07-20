@@ -227,9 +227,9 @@ async function sendYoutubeSong(sock, msg, query) {
     try {
         await sock.sendMessage(jid, { text: `🔍 *"${query}"* dhundh raha hoon YouTube pe...` }, { quoted: msg });
 
-        // 1. YouTube par song search karein
+        // 1. YouTube Search
         const searchResult = await yts(query);
-        const video = searchResult.videos[0]; // Pehla result select karein
+        const video = searchResult.videos[0];
 
         if (!video) {
             return await sock.sendMessage(jid, { text: '❌ Song nahi mila bhai, doosra naam try karo 😅' }, { quoted: msg });
@@ -242,23 +242,22 @@ async function sendYoutubeSong(sock, msg, query) {
             text: `🎵 Mila: *${title}*\n⏱️ Duration: *${video.timestamp}*\n⬇️ Audio download ho raha hai... thodi der ruko bhai`
         }, { quoted: msg });
 
-        // 2. Audio stream generate karein
+        // 2. Audio Stream Download
         const stream = ytdl(videoUrl, {
             filter: 'audioonly',
             quality: 'highestaudio',
         });
 
-        // Stream ko buffer me convert karein
         const chunks = [];
         for await (const chunk of stream) {
             chunks.push(chunk);
         }
         const audioBuffer = Buffer.concat(chunks);
 
-        // 3. Audio Message Bhejein
+        // 3. Audio Send
         await sock.sendMessage(jid, {
             audio: audioBuffer,
-            mimetype: 'audio/mp4', // Baileys me audio/mp4 zyada reliably play hota hai
+            mimetype: 'audio/mp4',
             ptt: false,
             fileName: `${title}.mp3`
         }, { quoted: msg });
