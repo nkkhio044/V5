@@ -1,0 +1,9 @@
+{
+  "ownerNumber": "917412902088",
+  "botName": "Dox",
+  "ownerName": "Uday",
+  "sessionDir": "./auth_info_baileys",
+  "prefix": "!",
+  "geminiApiKey": "YOUR_GEMINI_API_KEY",
+  "geminiModel": "gemini-2.5-flash"
+}

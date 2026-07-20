@@ -1,0 +1,16 @@
+{
+  "name": "dox-bot-panel",
+  "version": "1.0.0",
+  "description": "Web control panel for the WhatsApp Baileys bot — configure, upload session, start/stop from the browser",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.9",
+    "express": "^4.19.2",
+    "multer": "^1.4.5-lts.1",
+    "pino": "^9.3.2",
+    "dotenv": "^16.4.5"
+  }
+}

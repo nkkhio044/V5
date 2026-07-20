@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bot Control Panel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14171a;
+    --panel:#1c2024;
+    --panel-border:#2a2f34;
+    --text:#e6e6e1;
+    --text-dim:#8a9099;
+    --amber:#d4a15a;
+    --teal:#4f9d92;
+    --red:#c15b4a;
+    --mono:'JetBrains Mono', monospace;
+    --sans:'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    min-height:100vh;
+  }
+  .hidden{display:none !important;}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-direction:column;
+    gap:18px;
+  }
+  #loginScreen h1{
+    font-family:var(--mono);
+    font-size:15px;
+    letter-spacing:0.08em;
+    color:var(--text-dim);
+    text-transform:uppercase;
+  }
+  #loginScreen form{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    width:260px;
+  }
+  #loginError{color:var(--red); font-size:13px; font-family:var(--mono); min-height:16px;}
+
+  input, select{
+    background:#111417;
+    border:1px solid var(--panel-border);
+    color:var(--text);
+    padding:10px 12px;
+    border-radius:6px;
+    font-family:var(--sans);
+    font-size:14px;
+    outline:none;
+  }
+  input:focus, select:focus{border-color:var(--amber);}
+
+  button{
+    font-family:var(--mono);
+    font-size:13px;
+    letter-spacing:0.03em;
+    border:none;
+    border-radius:6px;
+    padding:11px 16px;
+    cursor:pointer;
+    transition:opacity .15s ease, transform .1s ease;
+  }
+  button:hover{opacity:0.88;}
+  button:active{transform:scale(0.98);}
+  button.primary{background:var(--amber); color:#1a1400;}
+  button.stop{background:var(--red); color:#fff;}
+  button.ghost{background:transparent; border:1px solid var(--panel-border); color:var(--text);}
+
+  /* ---------- APP SHELL ---------- */
+  #app{max-width:980px; margin:0 auto; padding:32px 20px 60px;}
+
+  header.topbar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--panel-border);
+    margin-bottom:28px;
+  }
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .name{font-family:var(--mono); font-size:18px; font-weight:700;}
+  .brand .tag{font-size:12px; color:var(--text-dim);}
+
+  .pulse-wrap{display:flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px;}
+  .pulse{
+    width:9px; height:9px; border-radius:50%;
+    background:var(--text-dim);
+    position:relative;
+  }
+  .pulse.on{background:var(--teal);}
+  .pulse.on::after{
+    content:'';
+    position:absolute; inset:-4px;
+    border-radius:50%;
+    border:1px solid var(--teal);
+    animation:ring 1.6s ease-out infinite;
+  }
+  @keyframes ring{
+    0%{transform:scale(0.6); opacity:0.9;}
+    100%{transform:scale(1.8); opacity:0;}
+  }
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:20px;}
+  @media (max-width:820px){.grid{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--panel-border);
+    border-radius:10px;
+    padding:22px;
+  }
+  .card h2{
+    font-family:var(--mono);
+    font-size:12px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--text-dim);
+    margin:0 0 16px;
+  }
+  .field{display:flex; flex-direction:column; gap:6px; margin-bottom:14px;}
+  .field label{font-size:12.5px; color:var(--text-dim);}
+
+  .row{display:flex; gap:10px;}
+  .row > *{flex:1;}
+
+  #saveMsg, #credsMsg, #controlMsg{
+    font-family:var(--mono); font-size:12px; min-height:16px; margin-top:8px;
+  }
+  .ok{color:var(--teal);} .err{color:var(--red);}
+
+  .dropzone{
+    border:1px dashed var(--panel-border);
+    border-radius:8px;
+    padding:22px;
+    text-align:center;
+    color:var(--text-dim);
+    font-size:13px;
+    cursor:pointer;
+  }
+  .dropzone.drag{border-color:var(--amber); color:var(--amber);}
+
+  .controls{display:flex; gap:10px; margin-bottom:14px;}
+  .controls button{flex:1;}
+
+  #terminal{
+    background:#0f1113;
+    border:1px solid var(--panel-border);
+    border-radius:8px;
+    padding:14px;
+    height:260px;
+    overflow-y:auto;
+    font-family:var(--mono);
+    font-size:12.5px;
+    line-height:1.6;
+    color:#c9d1d9;
+  }
+  #terminal .line{white-space:pre-wrap; word-break:break-word;}
+  #terminal .line.err{color:var(--red);}
+  #terminal::-webkit-scrollbar{width:8px;}
+  #terminal::-webkit-scrollbar-thumb{background:var(--panel-border); border-radius:4px;}
+
+  .full{grid-column:1 / -1;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <h1>Bot Control Panel</h1>
+  <form id="loginForm">
+    <input type="password" id="passwordInput" placeholder="Panel password" autocomplete="current-password" required>
+    <button type="submit" class="primary">Login</button>
+    <div id="loginError"></div>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="topbar">
+    <div class="brand">
+      <span class="name" id="brandName">Bot</span>
+      <span class="tag">control panel</span>
+    </div>
+    <div class="pulse-wrap">
+      <div class="pulse" id="statusPulse"></div>
+      <span id="statusText">stopped</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Bot config</h2>
+      <form id="configForm">
+        <div class="row">
+          <div class="field">
+            <label>Bot name</label>
+            <input name="botName" placeholder="Dox">
+          </div>
+          <div class="field">
+            <label>Owner name</label>
+            <input name="ownerName" placeholder="Uday">
+          </div>
+        </div>
+        <div class="field">
+          <label>Owner WhatsApp number (country code, no +)</label>
+          <input name="ownerNumber" placeholder="917412902088">
+        </div>
+        <div class="field">
+          <label>Command prefix</label>
+          <input name="prefix" placeholder="!" style="max-width:80px">
+        </div>
+        <div class="field">
+          <label>Gemini API key</label>
+          <input name="geminiApiKey" type="password" placeholder="AIza...">
+        </div>
+        <div class="field">
+          <label>Gemini model</label>
+          <select name="geminiModel">
+            <option value="gemini-2.5-flash">gemini-2.5-flash</option>
+            <option value="gemini-2.0-flash">gemini-2.0-flash</option>
+          </select>
+        </div>
+        <button type="submit" class="primary">Save config</button>
+        <div id="saveMsg"></div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>WhatsApp session (creds.json)</h2>
+      <div class="dropzone" id="dropzone">
+        <div id="credsStatusLine">Checking creds.json…</div>
+        <div style="margin-top:6px;">Click to choose file, or drag it here</div>
+      </div>
+      <input type="file" id="credsFile" accept="application/json" class="hidden">
+      <div id="credsMsg"></div>
+
+      <div style="margin-top:24px;">
+        <h2>Start / Stop</h2>
+        <div class="controls">
+          <button id="startBtn" class="primary">Start bot</button>
+          <button id="stopBtn" class="stop">Stop bot</button>
+        </div>
+        <div id="controlMsg"></div>
+      </div>
+    </div>
+
+    <div class="card full">
+      <h2>Live log</h2>
+      <div id="terminal"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let TOKEN = localStorage.getItem('panelToken') || null;
+let evtSource = null;
+
+const loginScreen = document.getElementById('loginScreen');
+const app = document.getElementById('app');
+
+function api(path, opts = {}) {
+  opts.headers = Object.assign({}, opts.headers, {
+    'Authorization': 'Bearer ' + TOKEN,
+    'Content-Type': opts.body instanceof FormData ? undefined : 'application/json',
+  });
+  return fetch(path, opts).then(async (r) => {
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(data.error || 'Request failed');
+    return data;
+  });
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const password = document.getElementById('passwordInput').value;
+  const errBox = document.getElementById('loginError');
+  errBox.textContent = '';
+  try {
+    const res = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Login failed');
+    TOKEN = data.token;
+    localStorage.setItem('panelToken', TOKEN);
+    boot();
+  } catch (err) {
+    errBox.textContent = err.message;
+  }
+});
+
+async function boot() {
+  try {
+    const cfg = await api('/api/config');
+    loginScreen.classList.add('hidden');
+    app.classList.remove('hidden');
+    fillConfig(cfg);
+    refreshCredsStatus();
+    refreshStatus();
+    connectLogStream();
+    setInterval(refreshStatus, 4000);
+  } catch (e) {
+    localStorage.removeItem('panelToken');
+    TOKEN = null;
+  }
+}
+
+function fillConfig(cfg) {
+  const form = document.getElementById('configForm');
+  form.botName.value = cfg.botName || '';
+  form.ownerName.value = cfg.ownerName || '';
+  form.ownerNumber.value = cfg.ownerNumber || '';
+  form.prefix.value = cfg.prefix || '!';
+  form.geminiModel.value = cfg.geminiModel || 'gemini-2.5-flash';
+  document.getElementById('brandName').textContent = cfg.botName || 'Bot';
+}
+
+document.getElementById('configForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const form = e.target;
+  const payload = {
+    botName: form.botName.value,
+    ownerName: form.ownerName.value,
+    ownerNumber: form.ownerNumber.value,
+    prefix: form.prefix.value,
+    geminiApiKey: form.geminiApiKey.value,
+    geminiModel: form.geminiModel.value,
+  };
+  const msg = document.getElementById('saveMsg');
+  try {
+    await api('/api/config', { method: 'POST', body: JSON.stringify(payload) });
+    msg.textContent = 'Saved ✓';
+    msg.className = 'ok';
+    document.getElementById('brandName').textContent = payload.botName || 'Bot';
+    form.geminiApiKey.value = '';
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.className = 'err';
+  }
+});
+
+// ---- creds upload ----
+const dropzone = document.getElementById('dropzone');
+const credsFile = document.getElementById('credsFile');
+
+dropzone.addEventListener('click', () => credsFile.click());
+dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag'); });
+dropzone.addEventListener('dragleave', () => dropzone.classList.remove('drag'));
+dropzone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('drag');
+  if (e.dataTransfer.files.length) uploadCreds(e.dataTransfer.files[0]);
+});
+credsFile.addEventListener('change', () => {
+  if (credsFile.files.length) uploadCreds(credsFile.files[0]);
+});
+
+async function uploadCreds(file) {
+  const msg = document.getElementById('credsMsg');
+  const fd = new FormData();
+  fd.append('creds', file);
+  try {
+    await api('/api/creds', { method: 'POST', body: fd });
+    msg.textContent = 'creds.json uploaded ✓';
+    msg.className = 'ok';
+    refreshCredsStatus();
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.className = 'err';
+  }
+}
+
+async function refreshCredsStatus() {
+  const line = document.getElementById('credsStatusLine');
+  try {
+    const res = await api('/api/creds/status');
+    line.textContent = res.exists ? 'creds.json is uploaded ✓' : 'No creds.json yet';
+  } catch (e) {}
+}
+
+// ---- start / stop ----
+document.getElementById('startBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('controlMsg');
+  try {
+    await api('/api/start', { method: 'POST' });
+    msg.textContent = 'Starting…';
+    msg.className = 'ok';
+    refreshStatus();
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.className = 'err';
+  }
+});
+
+document.getElementById('stopBtn').addEventListener('click', async () => {
+  const msg = document.getElementById('controlMsg');
+  try {
+    await api('/api/stop', { method: 'POST' });
+    msg.textContent = 'Stopping…';
+    msg.className = 'ok';
+    refreshStatus();
+  } catch (err) {
+    msg.textContent = err.message;
+    msg.className = 'err';
+  }
+});
+
+async function refreshStatus() {
+  try {
+    const s = await api('/api/status');
+    const pulse = document.getElementById('statusPulse');
+    const text = document.getElementById('statusText');
+    pulse.classList.toggle('on', s.running);
+    text.textContent = s.running ? 'running (pid ' + s.pid + ')' : 'stopped';
+  } catch (e) {}
+}
+
+// ---- live logs ----
+function connectLogStream() {
+  if (evtSource) evtSource.close();
+  evtSource = new EventSource('/api/logs/stream?token=' + encodeURIComponent(TOKEN));
+  const terminal = document.getElementById('terminal');
+  evtSource.onmessage = (e) => {
+    const entry = JSON.parse(e.data);
+    const div = document.createElement('div');
+    div.className = 'line' + (entry.line.includes('[ERR]') ? ' err' : '');
+    div.textContent = entry.line;
+    terminal.appendChild(div);
+    terminal.scrollTop = terminal.scrollHeight;
+  };
+}
+
+if (TOKEN) boot();
+</script>
+</body>
+</html>
