@@ -163,7 +163,6 @@ Rules:
         return null;
     }
 }
-}
 
 // ============================================
 // GEMINI AI — Image Vision
