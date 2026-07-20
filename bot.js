@@ -218,63 +218,47 @@ async function getGeminiImageReply(userId, imageBase64, caption, mimeType) {
 // YOUTUBE SONG DOWNLOAD
 // ============================================
 async function sendYoutubeSong(sock, msg, query) {
+const yts = require('yt-search');
+const ytdl = require('@distube/ytdl-core');
+
+async function sendYoutubeSong(sock, msg, query) {
     const jid = msg.key.remoteJid;
 
     try {
         await sock.sendMessage(jid, { text: `🔍 *"${query}"* dhundh raha hoon YouTube pe...` }, { quoted: msg });
 
-        const searchUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}&sp=EgIQAQ%3D%3D`;
-        const searchRes = await fetch(searchUrl, {
-            headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-        });
-        const html = await searchRes.text();
+        // 1. YouTube par song search karein
+        const searchResult = await yts(query);
+        const video = searchResult.videos[0]; // Pehla result select karein
 
-        const videoIdMatch = html.match(/"videoId":"([a-zA-Z0-9_-]{11})"/);
-        const titleMatch = html.match(/"title":{"runs":\[{"text":"([^"]+)"/);
-
-        if (!videoIdMatch) {
+        if (!video) {
             return await sock.sendMessage(jid, { text: '❌ Song nahi mila bhai, doosra naam try karo 😅' }, { quoted: msg });
         }
 
-        const videoId = videoIdMatch[1];
-        const title = titleMatch ? titleMatch[1] : query;
+        const title = video.title;
+        const videoUrl = video.url;
 
         await sock.sendMessage(jid, {
-            text: `🎵 Mila: *${title}*\n⬇️ Download ho raha hai... thodi der ruko bhai`
+            text: `🎵 Mila: *${title}*\n⏱️ Duration: *${video.timestamp}*\n⬇️ Audio download ho raha hai... thodi der ruko bhai`
         }, { quoted: msg });
 
-        const apis = [
-            `https://api.fabdl.com/youtube/get?url=https://youtu.be/${videoId}`,
-            `https://loader.to/ajax/download.php?format=mp3&url=https://youtu.be/${videoId}`,
-        ];
+        // 2. Audio stream generate karein
+        const stream = ytdl(videoUrl, {
+            filter: 'audioonly',
+            quality: 'highestaudio',
+        });
 
-        let audioUrl = null;
-
-        try {
-            const r1 = await fetch(apis[0]);
-            const d1 = await r1.json();
-            if (d1?.result?.download_url) audioUrl = d1.result.download_url;
-        } catch (e) {}
-
-        if (!audioUrl) {
-            try {
-                const ytApiUrl = `https://www.yt-download.org/api/button/mp3/${videoId}`;
-                const r2 = await fetch(ytApiUrl);
-                const h2 = await r2.text();
-                const mp3Match = h2.match(/href="(https:\/\/[^"]*\.mp3[^"]*)"/);
-                if (mp3Match) audioUrl = mp3Match[1];
-            } catch (e) {}
+        // Stream ko buffer me convert karein
+        const chunks = [];
+        for await (const chunk of stream) {
+            chunks.push(chunk);
         }
+        const audioBuffer = Buffer.concat(chunks);
 
-        if (!audioUrl) {
-            return await sock.sendMessage(jid, {
-                text: `❌ Download link nahi mila bhai 😅\n\n🔗 YouTube pe suno:\nhttps://youtu.be/${videoId}`
-            }, { quoted: msg });
-        }
-
+        // 3. Audio Message Bhejein
         await sock.sendMessage(jid, {
-            audio: { url: audioUrl },
-            mimetype: 'audio/mpeg',
+            audio: audioBuffer,
+            mimetype: 'audio/mp4', // Baileys me audio/mp4 zyada reliably play hota hai
             ptt: false,
             fileName: `${title}.mp3`
         }, { quoted: msg });
@@ -284,9 +268,9 @@ async function sendYoutubeSong(sock, msg, query) {
         }, { quoted: msg });
 
     } catch (err) {
-        console.error('Song error:', err.message);
+        console.error('Song error:', err);
         await sock.sendMessage(jid, {
-            text: '❌ Song download nahi hua bhai 😅\nInternet slow hai ya song available nahi. Dobara try karo.'
+            text: '❌ Song download nahi hua bhai 😅\nServer error ya song available nahi hai. Dobara try karo.'
         }, { quoted: msg });
     }
 }
